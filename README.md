@@ -37,7 +37,7 @@ Write operations should be added only after explicit review and should stay behi
 
 ## Reference spec
 
-This repo includes `akenea-openapi.yaml` as a **reference artifact**, not as the server's source of truth.
+This repo includes `akeneo-openapi.yaml` as a **reference artifact**, not as the server's source of truth.
 That file is useful for endpoint coverage, examples, and expansion planning, but Akeneo extends it with
 vendor-specific fields such as `x-validation-rules`, `x-body-by-line`, `x-app-token`, `x-no-token`,
 `x-warning`, and `x-immutable`.
