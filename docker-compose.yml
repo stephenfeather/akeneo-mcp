@@ -1,0 +1,12 @@
+services:
+  akeneo-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: akeneo-mcp:latest
+    container_name: akeneo-mcp
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:8094:8094"
+    restart: unless-stopped
