@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "akeneo-mcp"
+version = "0.1.0"
+description = "Private-first MCP server for Akeneo PIM"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "AGPL-3.0-only" }
+authors = [
+  { name = "Stephen Feather" }
+]
+keywords = ["mcp", "akeneo", "pim", "model-context-protocol", "docker"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: GNU Affero General Public License v3",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Internet :: WWW/HTTP",
+  "Topic :: Software Development :: Libraries :: Python Modules"
+]
+dependencies = [
+  "httpx>=0.27.0",
+  "mcp[cli]>=1.0.0",
+  "python-dotenv>=1.0.1"
+]
+
+[project.urls]
+Homepage = "https://github.com/stephenfeather/akeneo-mcp"
+Issues = "https://github.com/stephenfeather/akeneo-mcp/issues"
+
+[project.scripts]
+akeneo-mcp = "akeneo_mcp.main:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
