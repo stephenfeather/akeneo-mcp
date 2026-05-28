@@ -37,7 +37,7 @@ class AkeneoClient:
         return f"{self.settings.akeneo_base_url}/api/rest/v1"
 
     def _basic_auth_header(self) -> str:
-        raw = f"{self.settings.akeneo_client_id}:{self.settings.akeneo_client_secret}".encode("utf-8")
+        raw = f"{self.settings.akeneo_client_id}:{self.settings.akeneo_client_secret}".encode()
         return "Basic " + base64.b64encode(raw).decode("ascii")
 
     def _token_valid(self) -> bool:
@@ -181,7 +181,9 @@ class AkeneoClient:
             "filters_used": search,
             "endpoint": "/products-uuid",
             "count": body.get("current_item_count", 0),
-            "items": [self._summarize_product(item) for item in body.get("_embedded", {}).get("items", [])],
+            "items": [
+                self._summarize_product(item) for item in body.get("_embedded", {}).get("items", [])
+            ],
             "next": body.get("_links", {}).get("next", {}).get("href"),
             "previous": body.get("_links", {}).get("previous", {}).get("href"),
         }
@@ -199,7 +201,9 @@ class AkeneoClient:
         return payload
 
     async def list_families(self, *, limit: int = 50, page: int = 1) -> dict[str, Any]:
-        response = await self.request("GET", "/families", params={"limit": max(1, min(limit, 100)), "page": max(1, page)})
+        response = await self.request(
+            "GET", "/families", params={"limit": max(1, min(limit, 100)), "page": max(1, page)}
+        )
         body = response.json()
         items = body.get("_embedded", {}).get("items", [])
         return {
@@ -214,7 +218,9 @@ class AkeneoClient:
         return self._summarize_family(response.json(), include_attributes=True)
 
     async def list_attributes(self, *, limit: int = 50, page: int = 1) -> dict[str, Any]:
-        response = await self.request("GET", "/attributes", params={"limit": max(1, min(limit, 100)), "page": max(1, page)})
+        response = await self.request(
+            "GET", "/attributes", params={"limit": max(1, min(limit, 100)), "page": max(1, page)}
+        )
         body = response.json()
         items = body.get("_embedded", {}).get("items", [])
         return {
@@ -229,7 +235,9 @@ class AkeneoClient:
         return self._summarize_attribute(response.json(), detailed=True)
 
     async def list_categories(self, *, limit: int = 50, page: int = 1) -> dict[str, Any]:
-        response = await self.request("GET", "/categories", params={"limit": max(1, min(limit, 100)), "page": max(1, page)})
+        response = await self.request(
+            "GET", "/categories", params={"limit": max(1, min(limit, 100)), "page": max(1, page)}
+        )
         body = response.json()
         items = body.get("_embedded", {}).get("items", [])
         return {
@@ -248,7 +256,7 @@ class AkeneoClient:
         values = item.get("values") or {}
         label = None
         for key in ("name", "title", "label"):
-            if key in values and values[key]:
+            if values.get(key):
                 candidate = values[key][0].get("data")
                 if isinstance(candidate, str) and candidate.strip():
                     label = candidate.strip()
@@ -285,7 +293,9 @@ class AkeneoClient:
         }
 
     @staticmethod
-    def _summarize_family(item: dict[str, Any], *, include_attributes: bool = False) -> dict[str, Any]:
+    def _summarize_family(
+        item: dict[str, Any], *, include_attributes: bool = False
+    ) -> dict[str, Any]:
         payload = {
             "code": item.get("code"),
             "labels": item.get("labels", {}),
