@@ -48,8 +48,9 @@ async def search_products(
     limit: int = 10,
     page: int = 1,
     raw_search_json: str | None = None,
+    with_count: bool = False,
 ) -> dict[str, Any]:
-    """Search products via Akeneo's UUID collection endpoint with a small set of common filters plus a raw JSON escape hatch."""
+    """Search products via Akeneo's UUID collection endpoint with a small set of common filters plus a raw JSON escape hatch. Set with_count=true to include total_count in the response."""
     client = await get_client()
     return await client.search_products(
         family=family,
@@ -58,6 +59,7 @@ async def search_products(
         limit=limit,
         page=page,
         raw_search_json=raw_search_json,
+        with_count=with_count,
     )
 
 

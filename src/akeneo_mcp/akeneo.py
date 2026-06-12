@@ -153,6 +153,7 @@ class AkeneoClient:
         limit: int = 10,
         page: int = 1,
         raw_search_json: str | None = None,
+        with_count: bool = False,
     ) -> dict[str, Any]:
         search: dict[str, list[dict[str, Any]]] = {}
         if family:
@@ -172,20 +173,19 @@ class AkeneoClient:
             "page": max(1, page),
             "pagination_type": "page",
         }
+        if with_count:
+            params["with_count"] = "true"
         if search:
             params["search"] = json.dumps(search, separators=(",", ":"))
 
         response = await self.request("GET", "/products-uuid", params=params)
         body = response.json()
+        items = body.get("_embedded", {}).get("items", [])
         return {
             "filters_used": search,
             "endpoint": "/products-uuid",
-            "count": body.get("current_item_count", 0),
-            "items": [
-                self._summarize_product(item) for item in body.get("_embedded", {}).get("items", [])
-            ],
-            "next": body.get("_links", {}).get("next", {}).get("href"),
-            "previous": body.get("_links", {}).get("previous", {}).get("href"),
+            "items": [self._summarize_product(item) for item in items],
+            **self._collection_envelope(body, items=items),
         }
 
     async def get_product(self, identifier: str) -> dict[str, Any]:
@@ -207,10 +207,8 @@ class AkeneoClient:
         body = response.json()
         items = body.get("_embedded", {}).get("items", [])
         return {
-            "count": body.get("current_item_count", len(items)),
             "items": [self._summarize_family(item) for item in items],
-            "next": body.get("_links", {}).get("next", {}).get("href"),
-            "previous": body.get("_links", {}).get("previous", {}).get("href"),
+            **self._collection_envelope(body, items=items),
         }
 
     async def get_family(self, code: str) -> dict[str, Any]:
@@ -224,10 +222,8 @@ class AkeneoClient:
         body = response.json()
         items = body.get("_embedded", {}).get("items", [])
         return {
-            "count": body.get("current_item_count", len(items)),
             "items": [self._summarize_attribute(item) for item in items],
-            "next": body.get("_links", {}).get("next", {}).get("href"),
-            "previous": body.get("_links", {}).get("previous", {}).get("href"),
+            **self._collection_envelope(body, items=items),
         }
 
     async def get_attribute(self, code: str) -> dict[str, Any]:
@@ -241,15 +237,33 @@ class AkeneoClient:
         body = response.json()
         items = body.get("_embedded", {}).get("items", [])
         return {
-            "count": body.get("current_item_count", len(items)),
             "items": [self._summarize_category(item) for item in items],
-            "next": body.get("_links", {}).get("next", {}).get("href"),
-            "previous": body.get("_links", {}).get("previous", {}).get("href"),
+            **self._collection_envelope(body, items=items),
         }
 
     async def get_category(self, code: str) -> dict[str, Any]:
         response = await self.request("GET", f"/categories/{quote(code, safe='')}")
         return self._summarize_category(response.json(), detailed=True)
+
+    @staticmethod
+    def _extract_identifier(item: dict[str, Any]) -> Any:
+        """Akeneo's /products-uuid payloads omit the identifier field; hoist it from the sku value."""
+        if item.get("identifier") is not None:
+            return item["identifier"]
+        sku_entries = (item.get("values") or {}).get("sku") or []
+        if sku_entries and isinstance(sku_entries[0], dict):
+            return sku_entries[0].get("data")
+        return None
+
+    @staticmethod
+    def _collection_envelope(body: dict[str, Any], *, items: list[Any]) -> dict[str, Any]:
+        """Pagination envelope: count is the page size; total_count appears only when Akeneo sent items_count."""
+        envelope: dict[str, Any] = {"count": len(items)}
+        if "items_count" in body:
+            envelope["total_count"] = body["items_count"]
+        envelope["next"] = body.get("_links", {}).get("next", {}).get("href")
+        envelope["previous"] = body.get("_links", {}).get("previous", {}).get("href")
+        return envelope
 
     @staticmethod
     def _summarize_product(item: dict[str, Any]) -> dict[str, Any]:
@@ -262,7 +276,7 @@ class AkeneoClient:
                     label = candidate.strip()
                     break
         return {
-            "identifier": item.get("identifier"),
+            "identifier": AkeneoClient._extract_identifier(item),
             "uuid": item.get("uuid"),
             "label": label,
             "family": item.get("family"),
@@ -280,7 +294,7 @@ class AkeneoClient:
                 break
             summarized_values[code] = entries
         return {
-            "identifier": item.get("identifier"),
+            "identifier": AkeneoClient._extract_identifier(item),
             "uuid": item.get("uuid"),
             "family": item.get("family"),
             "enabled": item.get("enabled"),
