@@ -11,5 +11,11 @@ build/
 dist/
 *.egg-info/
 .env
+.envrc
 .DS_Store
 CLAUDE.local.md
+.claude/
+.mcp.json
+.tldr/
+.tldrignore
+thoughts/
