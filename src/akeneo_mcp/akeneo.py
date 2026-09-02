@@ -152,7 +152,7 @@ class AkeneoClient:
         categories_any: list[str] | None = None,
         limit: int = 10,
         page: int = 1,
-        raw_search_json: str | None = None,
+        raw_search_json: str | dict[str, Any] | None = None,
         with_count: bool = False,
     ) -> dict[str, Any]:
         search: dict[str, list[dict[str, Any]]] = {}
@@ -163,7 +163,9 @@ class AkeneoClient:
         if categories_any:
             search["categories"] = [{"operator": "IN", "value": categories_any}]
         if raw_search_json:
-            extra = json.loads(raw_search_json)
+            extra = (
+                json.loads(raw_search_json) if isinstance(raw_search_json, str) else raw_search_json
+            )
             if not isinstance(extra, dict):
                 raise ValueError("raw_search_json must decode to a JSON object")
             search.update(extra)

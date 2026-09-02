@@ -47,10 +47,14 @@ async def search_products(
     categories_any: list[str] | None = None,
     limit: int = 10,
     page: int = 1,
-    raw_search_json: str | None = None,
+    raw_search_json: str | dict[str, Any] | None = None,
     with_count: bool = False,
 ) -> dict[str, Any]:
-    """Search products via Akeneo's UUID collection endpoint with a small set of common filters plus a raw JSON escape hatch. Set with_count=true to include total_count in the response."""
+    """Search Akeneo's UUID collection with common filters and a raw JSON escape hatch.
+
+    Prefer a structured object for raw_search_json. Serialized JSON strings remain supported for
+    backward compatibility. Set with_count=true to include total_count in the response.
+    """
     client = await get_client()
     return await client.search_products(
         family=family,
@@ -129,7 +133,10 @@ async def explain_product_search_json() -> dict[str, Any]:
             "enabled": [{"operator": "=", "value": True}],
             "categories": [{"operator": "IN", "value": ["ecommerce"]}],
         },
-        "usage": "Pass the JSON object as a string via raw_search_json in search_products.",
+        "usage": (
+            "Pass a structured JSON object via raw_search_json (preferred). Serialized JSON strings "
+            "remain supported for backward compatibility."
+        ),
         "note": "This is an escape hatch for advanced searches when the simple tool arguments are not enough.",
     }
 
