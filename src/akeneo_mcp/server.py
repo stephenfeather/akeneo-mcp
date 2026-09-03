@@ -97,7 +97,7 @@ async def get_family(code: str) -> dict[str, Any]:
 
 @mcp.tool()
 async def list_attributes(limit: int = 50, page: int = 1) -> dict[str, Any]:
-    """List catalog attributes."""
+    """List catalog attributes, returning summaries in the top-level `items` array."""
     client = await get_client()
     return await client.list_attributes(limit=limit, page=page)
 
